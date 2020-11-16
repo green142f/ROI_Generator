@@ -15,6 +15,7 @@ size = (50,50) #Size of the ROI
 orderedList = [] #Array that holds the ROI grayscale values
 covidList = [] #Whether the ROI is covid positive or negative
 
+count = 1 #Whether to display or not
 
 
 
@@ -34,24 +35,29 @@ for image in input_dir[0:len_images]:
     
     im = Image.open(str(input_dir))
     
-    #im  = ImageOps.fit(im,(60,60),Image.ANTIALIAS) #This is done for testing purposes
-    # groundTruth  = ImageOps.fit(groundTruth,(60,60),Image.ANTIALIAS)
-
-
-    # plt.show()
+    # im  = ImageOps.fit(im,(100,90),Image.ANTIALIAS) #This is done for testing purposes
+    
     
 
     img = np.mean(im, axis=2) #Convert to grayscale
-
+    plt.imshow(Image.fromarray(img),cmap = "gray")
+    # plt.show()
+    print(img.shape)
+    print("YOLO")
 
 
     
 
     xBias = 0
     yBias = 0
+    
     while(xBias + size[0]<=img.shape[0] and yBias + size[1] <= img.shape[1]):
         crop_rectangle = (xBias,yBias,xBias + size[0],yBias + size[1])
         orderedList.append(np.mean(im.crop(crop_rectangle),axis = 2))
+        # plt.imshow(im.crop(crop_rectangle))
+        # plt.show()
+        # plt.imshow(orderedList[len(orderedList)-1],cmap = "gray")
+        # plt.show()
         # if(np.mean(im.crop(crop_rectangle))[int(size[0]/2)][int(size[1]/2)]>240):
         #     covidList.append(True)
         # else:
@@ -70,13 +76,27 @@ for image in input_dir[0:len_images]:
     
     groundTruthDir = (mod_path / "groundTruth" / image).resolve() #Path of the ground truth
     groundTruth = Image.open(str(groundTruthDir))
+    # groundTruth  = ImageOps.fit(groundTruth,(100,90),Image.ANTIALIAS)
     imgGround = np.mean(groundTruth, axis = 2)
+    plt.imshow(Image.fromarray(imgGround),cmap = "gray")
+    # plt.show()
+    print(imgGround.shape)
     xBias = 0
     yBias = 0
     while(xBias + size[0]<=imgGround.shape[0] and yBias + size[1] <= imgGround.shape[1]):
         crop_rectangle = (xBias,yBias,xBias + size[0],yBias + size[1])
         tempImage = np.mean(groundTruth.crop(crop_rectangle),axis = 2)
-        if(tempImage[int(size[0]/2)][int(size[1]/2)]>240):
+        if(count == 1):
+            print("in the zone")
+            plt.imshow(tempImage, cmap = "gray")
+            # plt.show()
+            plt.imshow(orderedList[0], cmap = "gray")
+            # plt.show()
+            count = 5
+            print(tempImage[int(size[1]/2)][int(size[0]/2)])
+        if(tempImage[int(size[1]/2)][int(size[0]/2)]>240):
+            if(count == 5):
+                print(tempImage[int(size[1]/2)][int(size[0]/2)])
             covidList.append(True)
         else:
             covidList.append(False) 
@@ -99,7 +119,9 @@ dictionary["status"] = covidList
 
 print(sum(dictionary["status"]))
 
-
+print(covidList[120])
+plt.imshow(orderedList[120],cmap = "gray")
+# plt.show()
 
 with open((mod_path / 'imageOne.pickle').resolve(),'wb') as handle:
 		pickle.dump(dictionary, handle, protocol = pickle.HIGHEST_PROTOCOL)
